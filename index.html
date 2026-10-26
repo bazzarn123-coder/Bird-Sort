@@ -27,6 +27,7 @@
         body {
             background: linear-gradient(180deg, #4ea3d8 0%, #78cced 50%, #cbebf8 100%);
             min-height: 100vh;
+            min-height: 100dvh;
             overflow: hidden;
             transition: background 0.5s ease;
         }
@@ -135,7 +136,7 @@
         }
     </style>
 </head>
-<body id="app-body" class="flex flex-col h-screen justify-between relative overflow-hidden select-none">
+<body id="app-body" class="flex flex-col h-[100dvh] justify-between relative overflow-hidden select-none">
 
     <!-- Foreground / Background Clouds Container -->
     <div id="clouds-container" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
@@ -168,7 +169,7 @@
     </svg>
 
     <!-- Header Controls: 2-Row Compact Layout -->
-    <header class="w-full max-w-4xl mx-auto px-3 pt-3 pb-1 flex flex-col space-y-2 z-20" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
+    <header class="w-full max-w-4xl mx-auto px-3 pt-3 pb-1 flex flex-col space-y-2 z-20 shrink-0" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
         <div class="flex justify-between items-center">
             <div class="flex items-center space-x-2">
                 <div class="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-sm border border-white/60 flex items-center space-x-2">
@@ -208,14 +209,14 @@
     </header>
 
     <!-- Main Game Arena: Symmetrical Two-Column Layout -->
-    <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-1 flex items-center justify-between relative z-10 overflow-hidden">
+    <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-1 flex items-center justify-between relative z-10 overflow-hidden min-h-0">
         <div id="left-branches" class="w-[42%] max-w-[320px] sm:max-w-[360px] flex flex-col justify-around h-full py-1 space-y-2 pl-2"></div>
         <div class="w-[16%] pointer-events-none flex items-center justify-center"></div>
         <div id="right-branches" class="w-[42%] max-w-[320px] sm:max-w-[360px] flex flex-col justify-around h-full py-1 space-y-2 pr-2"></div>
     </main>
 
     <!-- Footer Action Power-Up Toolbar -->
-    <footer class="w-full max-w-lg mx-auto z-20 flex justify-center px-4" style="padding-bottom: calc(1.75rem + env(safe-area-inset-bottom, 12px));">
+    <footer class="w-full max-w-lg mx-auto z-20 flex justify-center px-4 shrink-0" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom, 12px));">
         <div class="bg-white/85 backdrop-blur-md p-2 rounded-2xl shadow-xl border border-white/70 flex items-center space-x-2 w-full justify-around">
             <button onclick="game.addExtraBranch()" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 text-white font-bold py-2 px-3 rounded-xl shadow transition active:scale-95 flex flex-col items-center justify-center">
                 <div class="flex items-center space-x-1 text-xs">
@@ -487,22 +488,15 @@
                     if (isFlyingAway) {
                         return `
                         <svg viewBox="0 0 64 64" class="w-full h-full drop-shadow-md">
-                            <!-- Streamlined Body -->
                             <ellipse cx="32" cy="34" rx="10" ry="14" fill="#6E4723" transform="rotate(15 32 34)"/>
-                            <!-- Orange Breast -->
                             <path d="M 25 30 C 26 23, 37 23, 39 30 C 39 37, 25 38, 25 30 Z" fill="#D35400"/>
-                            <!-- Head & Beak -->
                             <circle cx="34" cy="20" r="7" fill="#6E4723"/>
                             <circle cx="36" cy="18" r="1.5" fill="#1C2833"/>
                             <path d="M 39 19 L 46 20 L 39 23 Z" fill="#2C3E50"/>
-                            <!-- Tail Feathers -->
                             <path d="M 28 47 L 24 58 L 32 52 L 36 58 Z" fill="#4A2810"/>
-                            <!-- Triangular Wings: Wide base joining bird body (e.g. from y=24 to y=36) tapering outward to tips -->
                             <g class="${isFlapping ? 'wing-flapping' : ''}">
-                                <!-- Left Triangular Wing -->
                                 <polygon points="25,24 6,10 25,38" fill="#854D0E"/>
                                 <polygon points="25,26 10,14 25,36" fill="#D35400" opacity="0.35"/>
-                                <!-- Right Triangular Wing -->
                                 <polygon points="39,24 58,10 39,38" fill="#854D0E"/>
                                 <polygon points="39,26 54,14 39,36" fill="#D35400" opacity="0.35"/>
                             </g>
