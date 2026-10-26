@@ -27,6 +27,7 @@
         body {
             background: linear-gradient(180deg, #4ea3d8 0%, #78cced 50%, #cbebf8 100%);
             min-height: 100vh;
+            min-height: 100dvh;
             overflow: hidden;
             transition: background 0.5s ease;
         }
@@ -135,7 +136,15 @@
         }
     </style>
 </head>
-<body id="app-body" class="flex flex-col h-screen justify-between relative overflow-hidden select-none">
+<body id="app-body" class="flex flex-col h-[100dvh] justify-between relative overflow-hidden select-none">
+
+    <!-- Splash Screen Intro Overlay using birds.jpg -->
+    <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col justify-end items-center pb-12 transition-opacity duration-500" style="background-image: url('birds.jpg'); background-size: cover; background-position: center;">
+        <button onclick="game.startGame()" class="bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xl px-10 py-4 rounded-full shadow-2xl border-4 border-white/90 transform active:scale-95 transition-all flex items-center space-x-3 drop-shadow-lg">
+            <i class="fa-solid fa-play"></i>
+            <span>START GAME</span>
+        </button>
+    </div>
 
     <!-- Foreground / Background Clouds Container -->
     <div id="clouds-container" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
@@ -168,7 +177,7 @@
     </svg>
 
     <!-- Header Controls: 2-Row Compact Layout -->
-    <header class="w-full max-w-4xl mx-auto px-3 pt-3 pb-1 flex flex-col space-y-2 z-20" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
+    <header class="w-full max-w-4xl mx-auto px-3 pt-3 pb-1 flex flex-col space-y-2 z-20 shrink-0" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
         <div class="flex justify-between items-center">
             <div class="flex items-center space-x-2">
                 <div class="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-sm border border-white/60 flex items-center space-x-2">
@@ -208,14 +217,14 @@
     </header>
 
     <!-- Main Game Arena: Symmetrical Two-Column Layout -->
-    <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-1 flex items-center justify-between relative z-10 overflow-hidden">
+    <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-1 flex items-center justify-between relative z-10 overflow-hidden min-h-0">
         <div id="left-branches" class="w-[42%] max-w-[320px] sm:max-w-[360px] flex flex-col justify-around h-full py-1 space-y-2 pl-2"></div>
         <div class="w-[16%] pointer-events-none flex items-center justify-center"></div>
         <div id="right-branches" class="w-[42%] max-w-[320px] sm:max-w-[360px] flex flex-col justify-around h-full py-1 space-y-2 pr-2"></div>
     </main>
 
     <!-- Footer Action Power-Up Toolbar -->
-    <footer class="w-full max-w-lg mx-auto z-20 flex justify-center px-4" style="padding-bottom: calc(1.75rem + env(safe-area-inset-bottom, 12px));">
+    <footer class="w-full max-w-lg mx-auto z-20 flex justify-center px-4 shrink-0" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom, 12px));">
         <div class="bg-white/85 backdrop-blur-md p-2 rounded-2xl shadow-xl border border-white/70 flex items-center space-x-2 w-full justify-around">
             <button onclick="game.addExtraBranch()" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 text-white font-bold py-2 px-3 rounded-xl shadow transition active:scale-95 flex flex-col items-center justify-center">
                 <div class="flex items-center space-x-1 text-xs">
@@ -487,22 +496,15 @@
                     if (isFlyingAway) {
                         return `
                         <svg viewBox="0 0 64 64" class="w-full h-full drop-shadow-md">
-                            <!-- Streamlined Body -->
                             <ellipse cx="32" cy="34" rx="10" ry="14" fill="#6E4723" transform="rotate(15 32 34)"/>
-                            <!-- Orange Breast -->
                             <path d="M 25 30 C 26 23, 37 23, 39 30 C 39 37, 25 38, 25 30 Z" fill="#D35400"/>
-                            <!-- Head & Beak -->
                             <circle cx="34" cy="20" r="7" fill="#6E4723"/>
                             <circle cx="36" cy="18" r="1.5" fill="#1C2833"/>
                             <path d="M 39 19 L 46 20 L 39 23 Z" fill="#2C3E50"/>
-                            <!-- Tail Feathers -->
                             <path d="M 28 47 L 24 58 L 32 52 L 36 58 Z" fill="#4A2810"/>
-                            <!-- Triangular Wings: Wide base joining bird body (e.g. from y=24 to y=36) tapering outward to tips -->
                             <g class="${isFlapping ? 'wing-flapping' : ''}">
-                                <!-- Left Triangular Wing -->
                                 <polygon points="25,24 6,10 25,38" fill="#854D0E"/>
                                 <polygon points="25,26 10,14 25,36" fill="#D35400" opacity="0.35"/>
-                                <!-- Right Triangular Wing -->
                                 <polygon points="39,24 58,10 39,38" fill="#854D0E"/>
                                 <polygon points="39,26 54,14 39,36" fill="#D35400" opacity="0.35"/>
                             </g>
@@ -807,6 +809,18 @@
                 this.updateUIEconomy();
             }
 
+            startGame() {
+                const splash = document.getElementById('splash-screen');
+                splash.classList.add('opacity-0', 'pointer-events-none');
+                this.sound.init();
+            }
+
+            getCapacity(levelNum = this.currentLevel) {
+                if (levelNum >= 30) return 6;
+                if (levelNum >= 20) return 5;
+                return 4;
+            }
+
             initClouds() {
                 const container = document.getElementById('clouds-container');
                 container.innerHTML = '';
@@ -847,6 +861,8 @@
                 document.getElementById('level-display').innerText = this.currentLevel;
                 document.getElementById('btn-undo').disabled = true;
 
+                const capacity = this.getCapacity(levelNum);
+
                 let numColors = 3;
                 if (levelNum >= 3) numColors = 4;
                 if (levelNum >= 5) numColors = 5;
@@ -858,7 +874,7 @@
 
                 let deck = [];
                 for (let colorId = 0; colorId < numColors; colorId++) {
-                    for (let i = 0; i < 4; i++) {
+                    for (let i = 0; i < capacity; i++) {
                         deck.push(colorId);
                     }
                 }
@@ -867,7 +883,7 @@
 
                 this.branches = [];
                 for (let i = 0; i < numColors; i++) {
-                    this.branches.push(deck.slice(i * 4, (i + 1) * 4));
+                    this.branches.push(deck.slice(i * capacity, (i + 1) * capacity));
                 }
                 for (let i = 0; i < totalBranches - numColors; i++) {
                     this.branches.push([]);
@@ -914,6 +930,7 @@
             }
 
             createBranchElement(index, birds, isLeft) {
+                const capacity = this.getCapacity(this.currentLevel);
                 const container = document.createElement('div');
                 container.className = `branch-container ${isLeft ? 'branch-left' : 'branch-right'} w-full relative flex items-center h-20 sm:h-24 ${this.selectedBranchIndex === index ? 'selected' : ''} selectable`;
                 container.dataset.index = index;
@@ -960,11 +977,18 @@
                 container.appendChild(woodSvg);
 
                 const birdsWrapper = document.createElement('div');
-                birdsWrapper.className = `absolute bottom-1.5 ${isLeft ? 'left-3' : 'right-3'} flex justify-start items-end h-16 ${isLeft ? 'flex-row' : 'flex-row-reverse'}`;
+                birdsWrapper.className = `absolute bottom-1.5 ${isLeft ? 'left-2' : 'right-2'} flex justify-start items-end h-16 ${isLeft ? 'flex-row' : 'flex-row-reverse'}`;
 
-                for (let slot = 0; slot < 4; slot++) {
+                let slotSizeClass = "w-10 h-14 sm:w-12 sm:h-16 md:w-14 md:h-18 -mr-2.5 sm:-mr-3";
+                if (capacity === 5) {
+                    slotSizeClass = "w-8 h-12 sm:w-10 sm:h-14 md:w-11 md:h-16 -mr-3 sm:-mr-3.5";
+                } else if (capacity === 6) {
+                    slotSizeClass = "w-7 h-10 sm:w-8 sm:h-12 md:w-9 md:h-14 -mr-3 sm:-mr-3.5";
+                }
+
+                for (let slot = 0; slot < capacity; slot++) {
                     const slotDiv = document.createElement('div');
-                    slotDiv.className = "w-10 h-14 sm:w-12 sm:h-16 md:w-14 md:h-18 relative flex items-center justify-center shrink-0 -mr-2.5 sm:-mr-3 z-10 hover:z-20 transition-all";
+                    slotDiv.className = `${slotSizeClass} relative flex items-center justify-center shrink-0 z-10 hover:z-20 transition-all`;
                     slotDiv.dataset.slot = slot;
 
                     if (slot < birds.length) {
@@ -973,7 +997,7 @@
                         const isSelected = (this.selectedBranchIndex === index && isTopBird);
 
                         const birdEl = document.createElement('div');
-                        birdEl.className = `w-10 h-14 sm:w-12 sm:h-16 md:w-14 md:h-18 transition-all ${isSelected ? 'bird-selected' : ''}`;
+                        birdEl.className = `${slotSizeClass.split(' ')[0]} ${slotSizeClass.split(' ')[1]} transition-all ${isSelected ? 'bird-selected' : ''}`;
                         birdEl.innerHTML = BIRD_SPECIES[birdType].renderSvg(false, false);
                         birdEl.id = `bird-${index}-${slot}`;
 
@@ -1019,10 +1043,11 @@
                     return;
                 }
 
+                const capacity = this.getCapacity(this.currentLevel);
                 const topBirdType = sourceBranch[sourceBranch.length - 1];
                 const isDestEmpty = destBranch.length === 0;
                 const isColorMatch = !isDestEmpty && destBranch[destBranch.length - 1] === topBirdType;
-                const hasSpace = destBranch.length < 4;
+                const hasSpace = destBranch.length < capacity;
 
                 if (hasSpace && (isDestEmpty || isColorMatch)) {
                     let countToMove = 0;
@@ -1034,7 +1059,7 @@
                         }
                     }
 
-                    const availableSpace = 4 - destBranch.length;
+                    const availableSpace = capacity - destBranch.length;
                     const actualMoveCount = Math.min(countToMove, availableSpace);
 
                     this.history.push(JSON.parse(JSON.stringify(this.branches)));
@@ -1147,9 +1172,10 @@
             }
 
             checkBranchCompletions() {
+                const capacity = this.getCapacity(this.currentLevel);
                 let anyBranchClearing = false;
                 this.branches.forEach((branch, bIdx) => {
-                    if (branch.length === 4) {
+                    if (branch.length === capacity) {
                         const firstColor = branch[0];
                         if (branch.every(color => color === firstColor)) {
                             anyBranchClearing = true;
@@ -1172,7 +1198,6 @@
                     return;
                 }
 
-                // Capture exact screen coordinates of each of the 4 bird slots on this branch
                 const slotElements = branchContainer.querySelectorAll('[id^="bird-"]');
                 const startCoords = [];
                 slotElements.forEach(el => {
@@ -1180,15 +1205,13 @@
                     startCoords.push({ x: rect.left, y: rect.top });
                 });
 
-                // Clear branch data immediately
                 const birdsToFly = [...this.branches[branchIdx]];
                 this.branches[branchIdx] = [];
                 this.render();
 
                 const flightOverlay = document.getElementById('flight-overlay');
                 
-                // 4 distinct divergent angles (e.g. Up-Left, Up-Right, Far-Left, Far-Right)
-                const angles = [-155, -110, -70, -25];
+                const angles = [-155, -110, -70, -25, -135, -45];
                 this.shuffleArray(angles, Date.now());
 
                 birdsToFly.forEach((birdType, i) => {
@@ -1196,9 +1219,7 @@
                         const startPos = startCoords[i] || { x: window.innerWidth * 0.5, y: window.innerHeight * 0.5 };
 
                         const flyer = document.createElement('div');
-                        // Larger container size for the soaring bird silhouette
                         flyer.className = 'flying-bird-container w-16 h-16 sm:w-20 sm:h-20';
-                        // Render with wide triangular wings (wide base joining body) in flight profile
                         flyer.innerHTML = BIRD_SPECIES[birdType].renderSvg(true, true);
                         
                         flyer.style.left = `${startPos.x - 8}px`;
@@ -1207,14 +1228,13 @@
 
                         this.sound.playChirp(birdType);
 
-                        const angleDeg = angles[i];
+                        const angleDeg = angles[i % angles.length];
                         const angleRad = (angleDeg * Math.PI) / 180;
                         const distance = 900 + Math.random() * 200;
                         const targetX = startPos.x + Math.cos(angleRad) * distance;
                         const targetY = startPos.y + Math.sin(angleRad) * distance;
 
                         const startTime = performance.now();
-                        // 10% faster than 3600ms = 3272ms
                         const duration = 3272;
 
                         const flyStep = (currentTime) => {
@@ -1252,10 +1272,11 @@
             }
 
             checkVictoryCondition() {
+                const capacity = this.getCapacity(this.currentLevel);
                 let allSolved = true;
                 this.branches.forEach(branch => {
                     if (branch.length > 0) {
-                        if (branch.length < 4 || !branch.every(c => c === branch[0])) {
+                        if (branch.length < capacity || !branch.every(c => c === branch[0])) {
                             allSolved = false;
                         }
                     }
@@ -1285,7 +1306,6 @@
 
             fireConfetti() {
                 if (typeof confetti === 'function') {
-                    // Exactly one single burst of confetti explosion
                     confetti({
                         particleCount: 100,
                         spread: 70,
@@ -1376,6 +1396,7 @@
                     return;
                 }
 
+                const capacity = this.getCapacity(this.currentLevel);
                 let sourceFound = null;
                 let destFound = null;
 
@@ -1386,7 +1407,7 @@
                     for (let j = 0; j < this.branches.length; j++) {
                         if (i === j) continue;
                         const dest = this.branches[j];
-                        if (dest.length < 4 && (dest.length === 0 || dest[dest.length - 1] === topBird)) {
+                        if (dest.length < capacity && (dest.length === 0 || dest[dest.length - 1] === topBird)) {
                             sourceFound = i;
                             destFound = j;
                             break;
@@ -1509,7 +1530,7 @@
                 const grid = document.getElementById('level-grid');
                 grid.innerHTML = '';
 
-                for (let i = 1; i <= Math.max(30, this.maxLevelUnlocked); i++) {
+                for (let i = 1; i <= Math.max(35, this.maxLevelUnlocked); i++) {
                     const btn = document.createElement('button');
                     const isUnlocked = i <= this.maxLevelUnlocked;
                     const isCurrent = i === this.currentLevel;
