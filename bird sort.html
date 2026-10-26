@@ -1,0 +1,1067 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bird Sort Puzzle - Snappy Wood Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        * {
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Sky Background with subtle clouds */
+        body {
+            background: linear-gradient(180deg, #70c3ec 0%, #9be2f7 50%, #e0f4fc 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.55);
+            border-radius: 50px;
+            pointer-events: none;
+            animation: floatClouds linear infinite;
+        }
+
+        @keyframes floatClouds {
+            from { transform: translateX(-220px); }
+            to { transform: translateX(100vw); }
+        }
+
+        /* 3D Realistic Textured Wood Branch */
+        .wood-branch {
+            position: relative;
+            background: linear-gradient(180deg, #A0522D 0%, #8B4513 30%, #5C2E0B 75%, #3D1E07 100%);
+            border-radius: 8px 16px 16px 8px;
+            box-shadow: 
+                inset 0 1.5px 2px rgba(255, 255, 255, 0.35),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.6),
+                0 4px 10px rgba(28, 15, 6, 0.3);
+            border-top: 1px solid rgba(230, 160, 110, 0.5);
+            border-bottom: 2px solid #231104;
+            transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        /* Bark Detail Overlay */
+        .wood-branch::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background-image: repeating-linear-gradient(
+                90deg,
+                rgba(0, 0, 0, 0.08) 0px,
+                rgba(0, 0, 0, 0.08) 4px,
+                transparent 4px,
+                transparent 12px
+            ),
+            linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.15) 100%);
+            pointer-events: none;
+        }
+
+        /* Branch Cut End Ring */
+        .wood-branch-end {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 14px;
+            border-radius: 10px 0 0 10px;
+            background: radial-gradient(ellipse at center, #D2B48C 0%, #A0522D 70%, #5C2E0B 100%);
+            border-right: 1.5px solid rgba(40, 20, 5, 0.6);
+            box-shadow: inset 1px 0 2px rgba(255,255,255,0.4);
+        }
+
+        /* Flip End Ring for Right Column */
+        .branch-right .wood-branch-end {
+            left: auto;
+            right: 0;
+            border-radius: 0 10px 10px 0;
+            border-right: none;
+            border-left: 1.5px solid rgba(40, 20, 5, 0.6);
+        }
+
+        .branch-right .wood-branch {
+            border-radius: 16px 8px 8px 16px;
+        }
+
+        /* Branch Hover & Selected Effects */
+        .branch-container.selectable:hover .wood-branch {
+            filter: brightness(1.08);
+            transform: scale(1.01);
+            cursor: pointer;
+        }
+
+        .branch-container.selected .wood-branch {
+            box-shadow: 
+                0 0 0 3px #F59E0B,
+                0 0 18px rgba(245, 158, 11, 0.8),
+                0 8px 16px rgba(0,0,0,0.3);
+            filter: brightness(1.12);
+        }
+
+        /* Dynamic Flying Bird Overlay Container */
+        .flying-bird-container {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999;
+            will-change: transform, left, top;
+        }
+
+        /* Fast Flapping Wing Animation */
+        .wing-flapping {
+            animation: flapWing 0.12s infinite alternate ease-in-out;
+            transform-origin: 26px 24px;
+        }
+
+        @keyframes flapWing {
+            0% { transform: rotate(0deg) scaleY(1); }
+            100% { transform: rotate(-45deg) scaleY(0.65); }
+        }
+
+        /* Fast Crisp Perch Landing Bounce */
+        .landing-bounce {
+            animation: bounceLanding 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceLanding {
+            0% { transform: translateY(-6px) scale(1.08, 0.92); }
+            60% { transform: translateY(2px) scale(0.96, 1.04); }
+            100% { transform: translateY(0) scale(1, 1); }
+        }
+
+        /* Selected Bird Hop loop */
+        .bird-selected {
+            animation: hopSelect 0.4s infinite alternate ease-in-out;
+        }
+
+        @keyframes hopSelect {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+
+        /* Fast Victory fly away */
+        .fly-away {
+            animation: victoryFly 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes victoryFly {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            40% { transform: translateY(-60px) scale(1.1) rotate(-12deg); opacity: 0.95; }
+            100% { transform: translateY(-600px) scale(0.3) rotate(20deg); opacity: 0; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen justify-between relative overflow-hidden select-none">
+
+    <!-- Global Floating Clouds -->
+    <div id="clouds-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+    <!-- Header / Top Control Bar -->
+    <header class="w-full max-w-5xl mx-auto px-4 pt-4 pb-2 flex justify-between items-center z-20">
+        <!-- Level Counter -->
+        <div class="flex items-center space-x-3">
+            <div class="bg-white/85 backdrop-blur-md px-4 py-2 rounded-2xl shadow-sm border border-white/60 flex items-center space-x-3">
+                <i class="fa-solid fa-crow text-amber-600 text-lg"></i>
+                <div>
+                    <h1 class="text-[10px] uppercase tracking-wider text-slate-500 font-extrabold leading-none">Level</h1>
+                    <span id="level-display" class="text-xl font-black text-slate-800 leading-none">1</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Control Buttons -->
+        <div class="flex items-center space-x-2">
+            <button id="btn-undo" onclick="game.undo()" title="Undo Move" class="w-11 h-11 bg-white/85 backdrop-blur-md hover:bg-white active:scale-90 transition rounded-2xl shadow-sm border border-white/60 flex items-center justify-center text-slate-700 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-rotate-left text-lg"></i>
+            </button>
+            <button id="btn-reset" onclick="game.resetLevel()" title="Restart Level" class="w-11 h-11 bg-white/85 backdrop-blur-md hover:bg-white active:scale-90 transition rounded-2xl shadow-sm border border-white/60 flex items-center justify-center text-slate-700">
+                <i class="fa-solid fa-arrow-rotate-right text-lg"></i>
+            </button>
+            <button id="btn-level-select" onclick="game.openLevelSelect()" title="Select Level" class="w-11 h-11 bg-white/85 backdrop-blur-md hover:bg-white active:scale-90 transition rounded-2xl shadow-sm border border-white/60 flex items-center justify-center text-slate-700">
+                <i class="fa-solid fa-list-ol text-lg"></i>
+            </button>
+            <button id="btn-sound" onclick="game.toggleSound()" title="Toggle Sound" class="w-11 h-11 bg-white/85 backdrop-blur-md hover:bg-white active:scale-90 transition rounded-2xl shadow-sm border border-white/60 flex items-center justify-center text-slate-700">
+                <i id="sound-icon" class="fa-solid fa-volume-high text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Arena: 2-Column Symmetrical Layout with LARGE Center Gap -->
+    <main class="flex-1 w-full max-w-6xl mx-auto px-4 py-2 flex items-center justify-between relative z-10">
+        <!-- Left Side Shorter Branches -->
+        <div id="left-branches" class="w-[39%] max-w-[290px] sm:max-w-[330px] flex flex-col justify-around h-full py-4 space-y-3 sm:space-y-5"></div>
+
+        <!-- WIDE CENTER GAP -->
+        <div class="w-[22%] pointer-events-none flex items-center justify-center"></div>
+
+        <!-- Right Side Shorter Branches -->
+        <div id="right-branches" class="w-[39%] max-w-[290px] sm:max-w-[330px] flex flex-col justify-around h-full py-4 space-y-3 sm:space-y-5"></div>
+    </main>
+
+    <!-- Footer Controls -->
+    <footer class="w-full max-w-md mx-auto pb-6 px-4 z-20 flex justify-center">
+        <button id="btn-add-branch" onclick="game.addExtraBranch()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold px-6 py-2.5 rounded-full shadow-lg hover:shadow-xl active:scale-95 transition flex items-center space-x-2 border border-emerald-300/40">
+            <i class="fa-solid fa-plus-circle text-lg"></i>
+            <span>Add Extra Branch</span>
+        </button>
+    </footer>
+
+    <!-- Flight Animation Overlay Layer -->
+    <div id="flight-overlay" class="fixed inset-0 pointer-events-none z-50"></div>
+
+    <!-- Level Select Modal -->
+    <div id="level-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200 p-4">
+        <div class="bg-white/95 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/80 transform scale-95 transition-transform duration-200 flex flex-col max-h-[80vh]">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-emerald-600"></i> Select Level
+                </h2>
+                <button onclick="game.closeLevelSelect()" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center rounded-full">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div id="level-grid" class="grid grid-cols-4 gap-3 overflow-y-auto p-1 flex-1"></div>
+        </div>
+    </div>
+
+    <!-- Victory Celebration Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200 p-4">
+        <div class="bg-white/95 rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-white/80 text-center transform scale-95 transition-transform duration-200">
+            <div class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-inner animate-bounce">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 mb-1">Level Complete!</h2>
+            <p class="text-slate-500 text-sm mb-6">All bird species sorted perfectly!</p>
+            
+            <div class="flex space-x-3">
+                <button onclick="game.resetLevel(); game.closeVictoryModal();" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl transition active:scale-95">
+                    Replay
+                </button>
+                <button onclick="game.nextLevel(); game.closeVictoryModal();" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-2xl shadow-lg shadow-emerald-500/30 transition active:scale-95">
+                    Next Level
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Synthesizer & Game Core Logic -->
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playChirp(birdType = 0) {
+                if (this.muted) return;
+                this.init();
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                const baseFreqs = [1400, 1000, 1700, 2100, 1200, 1900];
+                const freq = baseFreqs[birdType % baseFreqs.length] || 1400;
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+                osc.frequency.exponentialRampToValueAtTime(freq * 1.45, now + 0.05);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.85, now + 0.12);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.14);
+            }
+
+            playFlap() {
+                if (this.muted) return;
+                this.init();
+
+                const now = this.ctx.currentTime;
+                const bufferSize = this.ctx.sampleRate * 0.05;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(700, now);
+                filter.frequency.linearRampToValueAtTime(250, now + 0.05);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noise.start(now);
+            }
+
+            playLanding() {
+                if (this.muted) return;
+                this.init();
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.06);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.07);
+            }
+
+            playVictory() {
+                if (this.muted) return;
+                this.init();
+
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const now = this.ctx.currentTime + idx * 0.09;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                });
+            }
+        }
+
+        const BIRD_SPECIES = [
+            {
+                name: 'European Robin',
+                color: '#E67E22',
+                renderSvg: (isFlapping = false) => `
+                    <svg viewBox="0 0 65 55" class="w-full h-full drop-shadow-sm">
+                        <!-- Tail -->
+                        <path d="M 10 34 L 1 42 L 7 31 Z" fill="#4A2810" />
+                        <path d="M 12 35 L 3 46 L 9 32 Z" fill="#361C0A" />
+                        <!-- Body -->
+                        <path d="M 16 32 C 12 22 20 12 30 12 C 40 12 48 18 50 28 C 52 38 42 45 30 45 C 20 45 16 38 16 32 Z" fill="#6E4723" />
+                        <!-- Bright Orange Breast -->
+                        <path d="M 30 14 C 38 14 45 18 45 28 C 42 38 32 42 26 38 C 34 36 36 24 30 14 Z" fill="#D35400" />
+                        <!-- Belly -->
+                        <path d="M 30 45 C 22 45 18 41 22 35 C 26 41 30 43 30 45 Z" fill="#EAECEE" />
+                        <!-- Eye -->
+                        <circle cx="43" cy="18" r="2.8" fill="#1C2833" />
+                        <circle cx="43.8" cy="17.2" r="0.8" fill="#FFF" />
+                        <!-- Beak -->
+                        <path d="M 49 19 L 58 21 L 48 24 Z" fill="#2C3E50" />
+                        <!-- Wing -->
+                        <g class="${isFlapping ? 'wing-flapping' : ''}">
+                            <path d="M 20 28 C 24 18 34 20 36 30 C 30 38 22 36 20 28 Z" fill="#4A2810" />
+                            <path d="M 22 30 C 26 22 33 23 34 31 C 29 36 24 35 22 30 Z" fill="#854D0E" />
+                        </g>
+                        <!-- Thin Legs perched -->
+                        <path d="M 26 43 L 24 51 M 24 51 L 20 53 M 24 51 L 26 53" stroke="#2C3E50" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M 34 43 L 32 51 M 32 51 L 28 53 M 32 51 L 34 53" stroke="#2C3E50" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>`
+            },
+            {
+                name: 'Northern Cardinal',
+                color: '#C0392B',
+                renderSvg: (isFlapping = false) => `
+                    <svg viewBox="0 0 65 55" class="w-full h-full drop-shadow-sm">
+                        <!-- Tail -->
+                        <path d="M 10 34 L 0 42 L 7 30 Z" fill="#7B241C" />
+                        <!-- Crest & Crimson Body -->
+                        <path d="M 16 32 C 12 20 20 10 30 6 C 34 2 37 1 39 6 C 44 14 48 18 50 28 C 52 38 42 45 30 45 C 20 45 16 38 16 32 Z" fill="#C0392B" />
+                        <!-- Black Mask -->
+                        <path d="M 40 14 C 44 16 48 20 46 26 C 42 27 37 25 39 19 Z" fill="#17202A" />
+                        <!-- Eye -->
+                        <circle cx="41.5" cy="18" r="2.5" fill="#FFF" />
+                        <circle cx="41.5" cy="18" r="1.8" fill="#000" />
+                        <circle cx="42.2" cy="17.3" r="0.6" fill="#FFF" />
+                        <!-- Cone Beak -->
+                        <path d="M 46 19 L 57 21 L 45 25 Z" fill="#E67E22" />
+                        <!-- Wing -->
+                        <g class="${isFlapping ? 'wing-flapping' : ''}">
+                            <path d="M 18 29 C 22 19 34 19 36 31 C 29 39 20 39 18 29 Z" fill="#922B21" />
+                        </g>
+                        <!-- Legs -->
+                        <path d="M 26 43 L 24 51 M 24 51 L 20 53 M 24 51 L 26 53" stroke="#4A235A" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M 34 43 L 32 51 M 32 51 L 28 53 M 32 51 L 34 53" stroke="#4A235A" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>`
+            },
+            {
+                name: 'American Goldfinch',
+                color: '#F1C40F',
+                renderSvg: (isFlapping = false) => `
+                    <svg viewBox="0 0 65 55" class="w-full h-full drop-shadow-sm">
+                        <!-- Tail -->
+                        <path d="M 10 34 L 1 42 L 7 31 Z" fill="#17202A" />
+                        <!-- Yellow Body -->
+                        <path d="M 16 32 C 12 22 20 12 30 12 C 40 12 48 18 50 28 C 52 38 42 45 30 45 C 20 45 16 38 16 32 Z" fill="#F1C40F" />
+                        <!-- Black Forehead Cap -->
+                        <path d="M 36 12 C 40 12 44 14 43 18 C 39 18 37 14 36 12 Z" fill="#17202A" />
+                        <!-- Eye -->
+                        <circle cx="42" cy="18" r="2.5" fill="#17202A" />
+                        <circle cx="42.7" cy="17.3" r="0.7" fill="#FFF" />
+                        <!-- Pinkish Beak -->
+                        <path d="M 47 19 L 57 21 L 46 24 Z" fill="#F5CBA7" stroke="#D5DBDB" stroke-width="0.5" />
+                        <!-- Black & White Wing -->
+                        <g class="${isFlapping ? 'wing-flapping' : ''}">
+                            <path d="M 20 28 C 24 18 34 20 36 30 C 30 38 22 36 20 28 Z" fill="#17202A" />
+                            <path d="M 23 29 L 33 29 L 31 32 L 21 32 Z" fill="#FBFCFC" />
+                        </g>
+                        <!-- Legs -->
+                        <path d="M 26 43 L 24 51 M 24 51 L 20 53 M 24 51 L 26 53" stroke="#5D6D7E" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M 34 43 L 32 51 M 32 51 L 28 53 M 32 51 L 34 53" stroke="#5D6D7E" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>`
+            },
+            {
+                name: 'Eastern Bluebird',
+                color: '#2980B9',
+                renderSvg: (isFlapping = false) => `
+                    <svg viewBox="0 0 65 55" class="w-full h-full drop-shadow-sm">
+                        <!-- Tail -->
+                        <path d="M 10 34 L 1 42 L 7 31 Z" fill="#154360" />
+                        <!-- Royal Blue Body -->
+                        <path d="M 16 32 C 12 22 20 12 30 12 C 40 12 48 18 50 28 C 52 38 42 45 30 45 C 20 45 16 38 16 32 Z" fill="#2980B9" />
+                        <!-- Warm Chestnut Chest -->
+                        <path d="M 30 18 C 38 18 44 24 43 32 C 38 38 30 40 26 36 C 34 34 35 24 30 18 Z" fill="#BA4A00" />
+                        <!-- Eye -->
+                        <circle cx="42" cy="18" r="2.6" fill="#1C2833" />
+                        <circle cx="42.7" cy="17.3" r="0.7" fill="#FFF" />
+                        <!-- Beak -->
+                        <path d="M 47 19 L 57 21 L 46 24 Z" fill="#2C3E50" />
+                        <!-- Wing -->
+                        <g class="${isFlapping ? 'wing-flapping' : ''}">
+                            <path d="M 20 28 C 24 18 34 20 36 30 C 30 38 22 36 20 28 Z" fill="#1F618D" />
+                        </g>
+                        <!-- Legs -->
+                        <path d="M 26 43 L 24 51 M 24 51 L 20 53 M 24 51 L 26 53" stroke="#2C3E50" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M 34 43 L 32 51 M 32 51 L 28 53 M 32 51 L 34 53" stroke="#2C3E50" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>`
+            },
+            {
+                name: 'Scarlet Tanager',
+                color: '#E74C3C',
+                renderSvg: (isFlapping = false) => `
+                    <svg viewBox="0 0 65 55" class="w-full h-full drop-shadow-sm">
+                        <!-- Jet Black Tail -->
+                        <path d="M 10 34 L 1 42 L 7 31 Z" fill="#17202A" />
+                        <!-- Vibrant Red Body -->
+                        <path d="M 16 32 C 12 22 20 12 30 12 C 40 12 48 18 50 28 C 52 38 42 45 30 45 C 20 45 16 38 16 32 Z" fill="#E74C3C" />
+                        <!-- Eye -->
+                        <circle cx="42" cy="18" r="2.6" fill="#17202A" />
+                        <circle cx="42.7" cy="17.3" r="0.7" fill="#FFF" />
+                        <!-- Light Horn Beak -->
+                        <path d="M 47 19 L 57 21 L 46 24 Z" fill="#F5CBA7" stroke="#D5DBDB" stroke-width="0.5" />
+                        <!-- Black Wing -->
+                        <g class="${isFlapping ? 'wing-flapping' : ''}">
+                            <path d="M 20 28 C 24 18 34 20 36 30 C 30 38 22 36 20 28 Z" fill="#17202A" />
+                        </g>
+                        <!-- Legs -->
+                        <path d="M 26 43 L 24 51 M 24 51 L 20 53 M 24 51 L 26 53" stroke="#34495E" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M 34 43 L 32 51 M 32 51 L 28 53 M 32 51 L 34 53" stroke="#34495E" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>`
+            },
+            {
+                name: 'Common Kingfisher',
+                color: '#16A085',
+                renderSvg: (isFlapping = false) => `
+                    <svg viewBox="0 0 65 55" class="w-full h-full drop-shadow-sm">
+                        <!-- Short Teal Tail -->
+                        <path d="M 12 33 L 4 39 L 9 30 Z" fill="#0E6251" />
+                        <!-- Turquoise Body -->
+                        <path d="M 16 32 C 12 22 20 12 30 12 C 40 12 48 18 50 28 C 52 38 42 45 30 45 C 20 45 16 38 16 32 Z" fill="#16A085" />
+                        <!-- Bright Orange Underbelly -->
+                        <path d="M 28 22 C 34 22 42 26 40 36 C 35 42 26 42 24 36 C 30 36 32 28 28 22 Z" fill="#E67E22" />
+                        <!-- Eye -->
+                        <circle cx="41" cy="17" r="2.5" fill="#17202A" />
+                        <circle cx="41.7" cy="16.3" r="0.7" fill="#FFF" />
+                        <!-- Long Stabbing Beak -->
+                        <path d="M 45 18 L 62 19 L 44 23 Z" fill="#17202A" />
+                        <!-- Azure Wing -->
+                        <g class="${isFlapping ? 'wing-flapping' : ''}">
+                            <path d="M 20 27 C 24 17 34 19 35 29 C 29 37 21 35 20 27 Z" fill="#117A65" />
+                        </g>
+                        <!-- Tiny Coral Legs -->
+                        <path d="M 26 43 L 24 51 M 24 51 L 20 53 M 24 51 L 26 53" stroke="#C0392B" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M 34 43 L 32 51 M 32 51 L 28 53 M 32 51 L 34 53" stroke="#C0392B" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>`
+            }
+        ];
+
+        class BirdSortGame {
+            constructor() {
+                this.sound = new SoundEngine();
+                this.currentLevel = 1;
+                this.branches = [];
+                this.selectedBranchIndex = null;
+                this.history = [];
+                this.isAnimating = false;
+                this.maxLevelUnlocked = parseInt(localStorage.getItem('birdSort_maxLevel') || '1');
+
+                this.initClouds();
+                this.loadLevel(this.currentLevel);
+            }
+
+            initClouds() {
+                const container = document.getElementById('clouds-container');
+                container.innerHTML = '';
+                for (let i = 0; i < 5; i++) {
+                    const cloud = document.createElement('div');
+                    cloud.className = 'cloud';
+                    const w = 120 + Math.random() * 140;
+                    const h = 30 + Math.random() * 20;
+                    cloud.style.width = `${w}px`;
+                    cloud.style.height = `${h}px`;
+                    cloud.style.top = `${Math.random() * 70}%`;
+                    cloud.style.animationDuration = `${24 + Math.random() * 28}s`;
+                    cloud.style.animationDelay = `-${Math.random() * 25}s`;
+                    container.appendChild(cloud);
+                }
+            }
+
+            loadLevel(levelNum) {
+                this.currentLevel = levelNum;
+                this.selectedBranchIndex = null;
+                this.history = [];
+                this.isAnimating = false;
+
+                document.getElementById('level-display').innerText = this.currentLevel;
+                document.getElementById('btn-undo').disabled = true;
+
+                let numColors = 3;
+                if (levelNum >= 3) numColors = 4;
+                if (levelNum >= 6) numColors = 5;
+                if (levelNum >= 10) numColors = 6;
+
+                const totalBranches = numColors + 2;
+
+                let deck = [];
+                for (let colorId = 0; colorId < numColors; colorId++) {
+                    for (let i = 0; i < 4; i++) {
+                        deck.push(colorId);
+                    }
+                }
+
+                this.shuffleArray(deck, levelNum * 829 + 17);
+
+                this.branches = [];
+                for (let i = 0; i < numColors; i++) {
+                    this.branches.push(deck.slice(i * 4, (i + 1) * 4));
+                }
+                for (let i = 0; i < totalBranches - numColors; i++) {
+                    this.branches.push([]);
+                }
+
+                this.render();
+            }
+
+            shuffleArray(array, seed) {
+                let m = array.length, t, i;
+                let pseudoRandom = () => {
+                    let x = Math.sin(seed++) * 10000;
+                    return x - Math.floor(x);
+                };
+                while (m) {
+                    i = Math.floor(pseudoRandom() * m--);
+                    t = array[m];
+                    array[m] = array[i];
+                    array[i] = t;
+                }
+            }
+
+            render() {
+                const leftContainer = document.getElementById('left-branches');
+                const rightContainer = document.getElementById('right-branches');
+
+                leftContainer.innerHTML = '';
+                rightContainer.innerHTML = '';
+
+                const total = this.branches.length;
+                const half = Math.ceil(total / 2);
+
+                this.branches.forEach((branchBirds, index) => {
+                    const isLeft = index < half;
+                    const branchEl = this.createBranchElement(index, branchBirds, isLeft);
+
+                    if (isLeft) {
+                        leftContainer.appendChild(branchEl);
+                    } else {
+                        rightContainer.appendChild(branchEl);
+                    }
+                });
+            }
+
+            createBranchElement(index, birds, isLeft) {
+                const container = document.createElement('div');
+                container.className = `branch-container ${isLeft ? 'branch-left' : 'branch-right'} w-full relative flex items-center h-20 sm:h-22 ${this.selectedBranchIndex === index ? 'selected' : ''} selectable`;
+                container.dataset.index = index;
+                container.onclick = () => this.handleBranchClick(index);
+
+                // Thinned down Wood Branch (h-3.5 sm:h-4.5 for a slender, realistic look)
+                const wood = document.createElement('div');
+                wood.className = `wood-branch absolute bottom-1 w-[95%] h-3.5 sm:h-4.5 ${isLeft ? 'left-0' : 'right-0'}`;
+
+                // Ring cut end detail
+                const woodEnd = document.createElement('div');
+                woodEnd.className = 'wood-branch-end';
+                wood.appendChild(woodEnd);
+
+                // Decorative Leaf Accents
+                const leafSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                leafSvg.setAttribute("viewBox", "0 0 60 40");
+                leafSvg.setAttribute("class", `absolute -top-3.5 ${isLeft ? 'right-2' : 'left-2'} w-8 h-6 pointer-events-none drop-shadow-sm ${isLeft ? '' : 'scale-x-[-1]'}`);
+                leafSvg.innerHTML = `
+                    <path d="M 10 30 C 5 15 25 5 35 15 C 45 25 25 35 10 30 Z" fill="#58D68D" />
+                    <path d="M 25 25 C 20 10 40 2 50 10 C 60 20 40 30 25 25 Z" fill="#28B463" />
+                    <path d="M 10 30 Q 25 20 40 12" stroke="#1E8449" stroke-width="1.5" fill="none" />
+                `;
+                wood.appendChild(leafSvg);
+
+                container.appendChild(wood);
+
+                // TIGHTLY CLUSTURED Birds Container (-space-x-3 for sleek overlap perching)
+                const birdsWrapper = document.createElement('div');
+                birdsWrapper.className = `absolute bottom-2 ${isLeft ? 'left-3' : 'right-3'} flex justify-start items-end h-12 -space-x-3 ${isLeft ? 'flex-row' : 'flex-row-reverse'}`;
+
+                for (let slot = 0; slot < 4; slot++) {
+                    const slotDiv = document.createElement('div');
+                    slotDiv.className = "w-10 h-10 sm:w-11 sm:h-11 relative flex items-center justify-center shrink-0 z-10 hover:z-20 transition-all";
+                    slotDiv.dataset.slot = slot;
+
+                    if (slot < birds.length) {
+                        const birdType = birds[slot];
+                        const isTopBird = (slot === birds.length - 1);
+                        const isSelected = (this.selectedBranchIndex === index && isTopBird);
+
+                        const birdEl = document.createElement('div');
+                        birdEl.className = `w-10 h-10 sm:w-11 sm:h-11 transition-all ${isSelected ? 'bird-selected' : ''}`;
+                        birdEl.innerHTML = BIRD_SPECIES[birdType].renderSvg(false);
+                        birdEl.id = `bird-${index}-${slot}`;
+
+                        if (!isLeft) {
+                            birdEl.style.transform = 'scaleX(-1)';
+                        }
+
+                        slotDiv.appendChild(birdEl);
+                    }
+
+                    birdsWrapper.appendChild(slotDiv);
+                }
+
+                container.appendChild(birdsWrapper);
+                return container;
+            }
+
+            handleBranchClick(index) {
+                // HARD LOCK: Prevent any taps while birds are flying or clearing
+                if (this.isAnimating) return;
+
+                // Selecting source branch
+                if (this.selectedBranchIndex === null) {
+                    if (this.branches[index].length > 0) {
+                        this.selectedBranchIndex = index;
+                        const topBird = this.branches[index][this.branches[index].length - 1];
+                        this.sound.playChirp(topBird);
+                        this.render();
+                    }
+                    return;
+                }
+
+                // Deselecting if same branch clicked
+                if (this.selectedBranchIndex === index) {
+                    this.selectedBranchIndex = null;
+                    this.render();
+                    return;
+                }
+
+                // Attempting move to target branch
+                const sourceIdx = this.selectedBranchIndex;
+                const destIdx = index;
+                const sourceBranch = this.branches[sourceIdx];
+                const destBranch = this.branches[destIdx];
+
+                if (sourceBranch.length === 0) {
+                    this.selectedBranchIndex = null;
+                    this.render();
+                    return;
+                }
+
+                const topBirdType = sourceBranch[sourceBranch.length - 1];
+
+                const isDestEmpty = destBranch.length === 0;
+                const isColorMatch = !isDestEmpty && destBranch[destBranch.length - 1] === topBirdType;
+                const hasSpace = destBranch.length < 4;
+
+                if (hasSpace && (isDestEmpty || isColorMatch)) {
+                    let countToMove = 0;
+                    for (let i = sourceBranch.length - 1; i >= 0; i--) {
+                        if (sourceBranch[i] === topBirdType) {
+                            countToMove++;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    const availableSpace = 4 - destBranch.length;
+                    const actualMoveCount = Math.min(countToMove, availableSpace);
+
+                    this.history.push(JSON.parse(JSON.stringify(this.branches)));
+                    document.getElementById('btn-undo').disabled = false;
+
+                    this.executeFlightAnimation(sourceIdx, destIdx, actualMoveCount);
+                } else {
+                    if (destBranch.length > 0) {
+                        this.selectedBranchIndex = destIdx;
+                        const newTop = destBranch[destBranch.length - 1];
+                        this.sound.playChirp(newTop);
+                    } else {
+                        this.selectedBranchIndex = null;
+                    }
+                    this.render();
+                }
+            }
+
+            executeFlightAnimation(sourceIdx, destIdx, count) {
+                this.isAnimating = true;
+                this.selectedBranchIndex = null;
+
+                const birdType = this.branches[sourceIdx][this.branches[sourceIdx].length - 1];
+                let movedSoFar = 0;
+
+                const animateNextBird = () => {
+                    if (movedSoFar >= count) {
+                        this.isAnimating = false;
+                        this.render();
+                        this.checkBranchCompletions();
+                        return;
+                    }
+
+                    const srcSlot = this.branches[sourceIdx].length - 1;
+                    const destSlot = this.branches[destIdx].length;
+
+                    const srcEl = document.getElementById(`bird-${sourceIdx}-${srcSlot}`);
+                    const destBranchContainer = document.querySelectorAll('.branch-container')[destIdx];
+                    const destSlots = destBranchContainer.querySelectorAll('[data-slot]');
+                    const destSlotEl = destSlots[destSlot];
+
+                    if (!srcEl || !destSlotEl) {
+                        this.branches[destIdx].push(this.branches[sourceIdx].pop());
+                        movedSoFar++;
+                        animateNextBird();
+                        return;
+                    }
+
+                    const srcRect = srcEl.getBoundingClientRect();
+                    const destRect = destSlotEl.getBoundingClientRect();
+
+                    srcEl.style.visibility = 'hidden';
+
+                    const flightOverlay = document.getElementById('flight-overlay');
+                    const flyer = document.createElement('div');
+                    flyer.className = 'flying-bird-container w-10 h-10 sm:w-11 sm:h-11';
+                    flyer.innerHTML = BIRD_SPECIES[birdType].renderSvg(true);
+
+                    const facingLeft = destRect.left < srcRect.left;
+                    if (facingLeft) {
+                        flyer.style.transform = 'scaleX(-1)';
+                    }
+
+                    flyer.style.left = `${srcRect.left}px`;
+                    flyer.style.top = `${srcRect.top}px`;
+                    flightOverlay.appendChild(flyer);
+
+                    this.branches[destIdx].push(this.branches[sourceIdx].pop());
+
+                    this.sound.playFlap();
+
+                    const startTime = performance.now();
+                    const duration = 300; // Snappy 300ms transition
+
+                    const startX = srcRect.left;
+                    const startY = srcRect.top;
+                    const endX = destRect.left;
+                    const endY = destRect.top;
+
+                    const arcHeight = Math.min(Math.abs(endX - startX) * 0.35 + 40, 120);
+
+                    const step = (currentTime) => {
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+
+                        const ease = progress < 0.5 
+                            ? 2 * progress * progress 
+                            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                        const currentX = startX + (endX - startX) * ease;
+                        const currentY = startY + (endY - startY) * ease - Math.sin(progress * Math.PI) * arcHeight;
+
+                        flyer.style.left = `${currentX}px`;
+                        flyer.style.top = `${currentY}px`;
+
+                        if (progress < 1) {
+                            requestAnimationFrame(step);
+                        } else {
+                            flightOverlay.removeChild(flyer);
+                            this.sound.playLanding();
+
+                            this.render();
+                            const landedBirdEl = document.getElementById(`bird-${destIdx}-${destSlot}`);
+                            if (landedBirdEl) {
+                                landedBirdEl.classList.add('landing-bounce');
+                            }
+
+                            movedSoFar++;
+                            setTimeout(animateNextBird, 40);
+                        }
+                    };
+
+                    requestAnimationFrame(step);
+                };
+
+                animateNextBird();
+            }
+
+            checkBranchCompletions() {
+                let anyBranchClearing = false;
+
+                this.branches.forEach((branch, bIdx) => {
+                    if (branch.length === 4) {
+                        const firstColor = branch[0];
+                        const isComplete = branch.every(color => color === firstColor);
+
+                        if (isComplete) {
+                            anyBranchClearing = true;
+                            this.triggerBranchFlyAway(bIdx);
+                        }
+                    }
+                });
+
+                if (!anyBranchClearing) {
+                    this.checkVictoryCondition();
+                }
+            }
+
+            triggerBranchFlyAway(branchIdx) {
+                // HARD LOCK: Prevent user interaction during fly-away transition
+                this.isAnimating = true;
+
+                const branchContainer = document.querySelectorAll('.branch-container')[branchIdx];
+                if (!branchContainer) {
+                    this.branches[branchIdx] = [];
+                    this.isAnimating = false;
+                    this.render();
+                    this.checkVictoryCondition();
+                    return;
+                }
+
+                const birdElements = branchContainer.querySelectorAll('[id^="bird-"]');
+                birdElements.forEach((birdEl, i) => {
+                    setTimeout(() => {
+                        birdEl.classList.add('fly-away');
+                        this.sound.playChirp(this.branches[branchIdx][0] || 0);
+                    }, i * 50);
+                });
+
+                // Clear state permanently ONLY after fly away animation finishes
+                setTimeout(() => {
+                    this.branches[branchIdx] = [];
+                    this.isAnimating = false;
+                    this.render();
+                    this.checkVictoryCondition();
+                }, 750);
+            }
+
+            checkVictoryCondition() {
+                let allSolved = true;
+                this.branches.forEach(branch => {
+                    if (branch.length > 0) {
+                        if (branch.length < 4) {
+                            allSolved = false;
+                        } else {
+                            const firstColor = branch[0];
+                            if (!branch.every(color => color === firstColor)) {
+                                allSolved = false;
+                            }
+                        }
+                    }
+                });
+
+                if (allSolved) {
+                    setTimeout(() => {
+                        this.sound.playVictory();
+                        this.fireConfetti();
+                        this.openVictoryModal();
+                        if (this.currentLevel >= this.maxLevelUnlocked) {
+                            this.maxLevelUnlocked = this.currentLevel + 1;
+                            localStorage.setItem('birdSort_maxLevel', this.maxLevelUnlocked.toString());
+                        }
+                    }, 250);
+                }
+            }
+
+            fireConfetti() {
+                if (typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 80,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                }
+            }
+
+            undo() {
+                if (this.history.length === 0 || this.isAnimating) return;
+                this.branches = this.history.pop();
+                if (this.history.length === 0) {
+                    document.getElementById('btn-undo').disabled = true;
+                }
+                this.selectedBranchIndex = null;
+                this.render();
+            }
+
+            resetLevel() {
+                if (this.isAnimating) return;
+                this.loadLevel(this.currentLevel);
+            }
+
+            addExtraBranch() {
+                if (this.isAnimating || this.branches.length >= 10) return;
+                this.history.push(JSON.parse(JSON.stringify(this.branches)));
+                document.getElementById('btn-undo').disabled = false;
+                this.branches.push([]);
+                this.render();
+            }
+
+            toggleSound() {
+                this.sound.muted = !this.sound.muted;
+                const icon = document.getElementById('sound-icon');
+                if (this.sound.muted) {
+                    icon.className = "fa-solid fa-volume-xmark text-lg text-slate-400";
+                } else {
+                    icon.className = "fa-solid fa-volume-high text-lg text-slate-700";
+                }
+            }
+
+            openLevelSelect() {
+                const modal = document.getElementById('level-modal');
+                const grid = document.getElementById('level-grid');
+                grid.innerHTML = '';
+
+                for (let i = 1; i <= Math.max(12, this.maxLevelUnlocked); i++) {
+                    const btn = document.createElement('button');
+                    const isUnlocked = i <= this.maxLevelUnlocked;
+                    const isCurrent = i === this.currentLevel;
+
+                    btn.className = `h-12 rounded-2xl font-black text-sm flex items-center justify-center transition active:scale-90 ${
+                        isCurrent 
+                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30 ring-2 ring-amber-300' 
+                            : isUnlocked 
+                                ? 'bg-slate-100 text-slate-800 hover:bg-slate-200' 
+                                : 'bg-slate-100 text-slate-300 pointer-events-none'
+                    }`;
+
+                    btn.innerHTML = isUnlocked ? i : '<i class="fa-solid fa-lock text-xs"></i>';
+                    btn.onclick = () => {
+                        this.loadLevel(i);
+                        this.closeLevelSelect();
+                    };
+                    grid.appendChild(btn);
+                }
+
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modal.firstElementChild.classList.remove('scale-95');
+            }
+
+            closeLevelSelect() {
+                const modal = document.getElementById('level-modal');
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.firstElementChild.classList.add('scale-95');
+            }
+
+            openVictoryModal() {
+                const modal = document.getElementById('victory-modal');
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modal.firstElementChild.classList.remove('scale-95');
+            }
+
+            closeVictoryModal() {
+                const modal = document.getElementById('victory-modal');
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.firstElementChild.classList.add('scale-95');
+            }
+
+            nextLevel() {
+                this.loadLevel(this.currentLevel + 1);
+            }
+        }
+
+        let game;
+        window.onload = () => {
+            game = new BirdSortGame();
+        };
+    </script>
+</body>
+</html>
